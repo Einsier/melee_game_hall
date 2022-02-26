@@ -1,0 +1,134 @@
+syntax = "proto3";
+option go_package = ".;client";
+
+
+
+service Client {
+  rpc Serve (stream CToH) returns (stream HToC) {}
+}
+
+//客户端到大厅服务器的消息类型
+message CToH{
+  CToHType              msgType = 1;
+  LoginRequest          loginRequest= 2;
+  GetPlayerInfoRequest  getPlayerInfoRequest= 3;
+  StartQueueRequest     startQueueRequest = 4;
+  StopQueuingRequest    stopQueuingRequest = 5;
+  QuitHallRequest       quitHallRequest = 6;
+}
+
+//大厅服务器到客户端的消息类型
+message HToC{
+  HToCType              msgType = 1;
+  LoginResponse         loginResponse = 2;
+  StartQueueResponse    StartQueueResponse = 3;
+  GetPlayerInfoResponse getPlayerInfoResponse = 4;
+  StopQueuingResponse   stopQueuingResponse = 5;
+  QuitHallResponse      quitHallResponse = 6;
+  Broadcast             broadcast       = 7;
+}
+
+//CToHType 客户端到大厅服务器的消息类型
+enum CToHType{
+  LoginReq   = 0;           //登录请求
+  GetPlayerInfoReq = 1;     //获取玩家信息请求
+  StartQueuingReq = 2;      //开始排队请求
+  StopQueuingReq = 3;       //取消排队请求
+  QuitHallReq    = 4;      //退出请求
+}
+
+//HToCType 大厅服务器到客户端的消息类型
+enum HToCType{
+  LoginResp   = 0;
+  GetPlayerInfoResp = 1;
+  StartQueuingResp = 2;
+  StopQueuingResp = 3;
+  QuitHallResp = 4;
+
+
+  BroadcastType = 15;
+}
+
+
+//登录有关
+message LoginRequest{
+  string phoneNum = 1;
+  string password = 2;
+}
+message LoginResponse{
+  bool  ok = 1;     //登录是否成功
+  LoginErrorType error = 2; //如果不成功返回错误信息
+  PlayerInfo pInfo = 3; //如果成功返回玩家信息
+}
+enum LoginErrorType{
+  PhoneNotExist = 0;    //手机号未注册
+  WrongPassword = 1;    //密码不正确
+  AccountNotExist = 2;  //账户不存在
+  DBInnerError   = 3;   //数据库内部错误
+  HallInnerError = 4;
+}
+message PlayerInfo{
+  int32 PlayerId = 1;
+  string NickName = 2;
+  int32 GameCount = 3;		  //参与游戏数
+  int32 KillNum = 4;				//总击杀数
+  int32 MaxKill = 5;			  //最高单局击杀数
+}
+
+//排队有关
+message StartQueueRequest {
+  int32     playerId = 1;   //待排队的玩家id
+  GameType  gameType = 2;   //游戏类型
+}
+message StartQueueResponse{
+  bool                  ok = 1;
+  GameServerConnection  gameServerConnection = 2; //如果排队成功,返回gameServer的联系方式
+  QueueErrorType        error = 3;    //如果排队失败,返回错误信息
+}
+message GameServerConnection{
+  string  ip   = 1;
+  string  port = 2;
+  int32   roomId = 3;
+}
+enum QueueErrorType{
+  CanNotStartGameServer = 0;
+  CanNotStartGameRoom = 1;
+  WrongPlayerId       = 2;
+  NoEnoughPlayer      = 3;
+}
+enum GameType{
+  NormalGameType = 0;
+}
+message StopQueuingRequest{
+  int32 playerId = 1;
+  GameType  gameType = 2;   //游戏类型
+}
+message StopQueuingResponse{
+  bool ok = 1;
+}
+
+//获取玩家信息有关
+message GetPlayerInfoRequest{
+  int32 playerId = 1;
+}
+message GetPlayerInfoResponse{
+  bool ok = 1;
+  PlayerInfo pInfo = 2;
+}
+enum GetPlayerInfoErrorType{
+  IllegalPlayerId = 0;  //非法玩家id(例如该玩家id没有被注册)
+  HiddenPlayerInfo = 1; //该玩家选择隐藏id
+}
+
+//退出大厅有关
+message QuitHallRequest{
+  int32 playerId = 1;   //实际上没有什么用...
+}
+message QuitHallResponse{
+  bool ok = 1;
+}
+
+//广播有关
+message Broadcast{
+  string msg = 1;
+}
