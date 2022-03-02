@@ -76,21 +76,24 @@ func (h *Hall) Serve(stream client.Client_ServeServer) error {
 
 	//代码执行到这里,用户已经登录成功,存储该用户,表示其上线
 	h.AddHallPlayer(hallPlayer)
+	logger.Infof("playerId:%d的player进入大厅", pId)
 
 	//等待用户做事情
 	for {
 		info, err := stream.Recv()
 		if err != nil {
-			logger.Errorf("来自playerId:%d的hall服务器连接有误:err", pId, err)
+			logger.Errorf("来自playerId:%d的hall服务器连接有误:%s,已在大厅中删除该玩家", pId, err.Error())
+			h.DeleteHallPlayer(pId)
 			return err
 		}
 
 		//处理客户端发来的信息
 		switch info.MsgType {
 		case client.CToHType_LoginReq:
-			//收到已经登录的玩家的登录请求,不校验,回复一个登录成功请求
+			//收到已经登录的玩家的登录请求,不校验,回复一个登录成功请求,把玩家在大厅中的状态改为idle状态
 			hToC = codec.NewLoginResponse(true, 0, pInfo)
 			err = stream.Send(hToC)
+			h.GetHallPlayer(pId).SetStatus(entity.PlayerIdle)
 		case client.CToHType_QuitHallReq:
 			//退出大厅请求,删除该用户在大厅的存根并return
 			h.DeleteHallPlayer(pId)

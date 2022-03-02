@@ -24,6 +24,8 @@ const (
 type HallPlayer struct {
 	PlayerId int32 //玩家id
 
+	QueueType GameType //如果当前状态为排队,此字段表示正在拍的队列的游戏类型
+
 	sLock  sync.Mutex
 	status PlayerStatus //玩家当前在大厅中的状态
 

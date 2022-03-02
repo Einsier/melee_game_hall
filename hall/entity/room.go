@@ -26,6 +26,7 @@ type RoomInfo struct {
 	status RoomStatus //这个room的状态
 }
 
+//RoomInfoFromGS 将从gs获取的房间信息转换为hall内部的房间信息
 func RoomInfoFromGS(info *gs.RoomInfo) *RoomInfo {
 	ri := new(RoomInfo)
 	ri.Id = CountIdFromGS(info)

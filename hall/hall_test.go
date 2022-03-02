@@ -18,7 +18,7 @@ import (
 
 const MaxTestPlayerNum = 500
 
-var testHall = NewHall()
+var testHall = NewHall("localhost:8000")
 
 //testHallPlayerSlice 存储0~MaxTestPlayerNum,下标为x的存储playerId为x的Player
 var testHallPlayerSlice = make([]*entity.HallPlayer, MaxTestPlayerNum)
