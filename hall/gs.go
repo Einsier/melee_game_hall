@@ -16,8 +16,8 @@ import (
 *@Description:用于rpc调用game_server,或者让game_server rpc调用自己
  */
 
-func callGsRpc(gsAddr, rpcName string, args interface{}, reply interface{}) error {
-	c, err := rpc.DialHTTP("tcp", gsAddr)
+func callRpc(rpcAddr, rpcName string, args interface{}, reply interface{}) error {
+	c, err := rpc.DialHTTP("tcp", rpcAddr)
 	if err != nil {
 		return err
 	}
@@ -40,7 +40,7 @@ func CreateGameRoom(gsIP, gsPort string, gameType entity.GameType, info []*entit
 		}
 		createReq.PlayerInfo = pIds
 		ret := new(gs.CreateNormalGameResponse)
-		err := callGsRpc(gsIP+gsPort, "GameServer.CreateNormalGameRoom", createReq, ret)
+		err := callRpc(gsIP+gsPort, "GameServer.CreateNormalGameRoom", createReq, ret)
 		if err != nil {
 			return nil, err
 		} else if !ret.Ok || ret.ConnectionInfo == nil {
@@ -62,7 +62,7 @@ func CreateGameRoom(gsIP, gsPort string, gameType entity.GameType, info []*entit
 func StartGame(gsIP, gsPort string, roomId int32) error {
 	startGameRep := gs.StartNormalGameRequest{RoomId: roomId}
 	ret := new(gs.StartNormalGameResponse)
-	err := callGsRpc(gsIP+gsPort, "GameServer.StartNormalGame", startGameRep, ret)
+	err := callRpc(gsIP+gsPort, "GameServer.StartNormalGame", startGameRep, ret)
 	if err != nil {
 		return err
 	} else {
@@ -76,7 +76,7 @@ func StartGame(gsIP, gsPort string, roomId int32) error {
 func DestroyGameRoom(gsIP, gsPort string, roomId int32) (gs.RoomStatus, error) {
 	destroyGameRoomReq := gs.DestroyGameRoomRequest{RoomId: roomId}
 	ret := new(gs.DestroyGameRoomResponse)
-	err := callGsRpc(gsIP+gsPort, "GameServer.DestroyGameRoom", destroyGameRoomReq, ret)
+	err := callRpc(gsIP+gsPort, "GameServer.DestroyGameRoom", destroyGameRoomReq, ret)
 	if err != nil {
 		return 0, err
 	} else {

@@ -18,7 +18,7 @@ const (
 )
 
 var GameTypeMaxPlayer = map[GameType]int{
-	NormalGameType: 2,
+	NormalGameType: 3,
 }
 
 type RoomInfo struct {
