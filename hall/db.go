@@ -2,6 +2,7 @@ package hall
 
 import (
 	"melee_game_hall/api/database"
+	"melee_game_hall/plugins/logger"
 	"strconv"
 )
 
@@ -72,17 +73,41 @@ func (dbp *DBProxy) SearchPlayerInfo(req *database.SearchPlayerInfoRequest) *dat
 		Info: &database.PlayerInfo{
 			PlayerId:  req.PlayerId,
 			NickName:  "player" + strconv.Itoa(int(req.PlayerId)),
-			GameCount: req.PlayerId * 2,
-			KillNum:   req.PlayerId * 3,
-			MaxKill:   req.PlayerId * 4,
+			GameCount: req.PlayerId,
+			KillNum:   req.PlayerId,
+			MaxKill:   req.PlayerId,
 		},
 	}
 }
 
 func (dbp *DBProxy) UpdatePlayerInfo(req *database.UpdatePlayerInfoRequest) *database.UpdatePlayerInfoResponse {
-	return nil
+	/*resp := new(database.UpdatePlayerInfoResponse)
+	err := callRpc(dbp.addr,"HallHandler.UpdatePlayerInfo",req,resp)
+	if err!=nil{
+		logger.Errorf("数据库代理模块出现连接不上的情况:",err)
+		return nil
+	}
+	return resp*/
+	logger.Infof("落库玩家消息:%+v", req.Info)
+	//todo 测试用
+	return &database.UpdatePlayerInfoResponse{
+		Ok:    true,
+		Error: 0,
+		Info:  nil,
+	}
 }
 
 func (dbp *DBProxy) AddSingleGameInfo(req *database.AddSingleGameInfoRequest) *database.AddSingleGameInfoResponse {
-	return nil
+	/*	resp := new(database.AddSingleGameInfoResponse)
+		err := callRpc(dbp.addr,"HallHandler.AddSingleGameInfo",req,resp)
+		if err!=nil{
+			logger.Errorf("数据库代理模块出现连接不上的情况:",err)
+			return nil
+		}
+		return resp*/
+	logger.Infof("落库对局消息:%+v", req.Info)
+	return &database.AddSingleGameInfoResponse{
+		Ok:    true,
+		Error: 0,
+	}
 }
