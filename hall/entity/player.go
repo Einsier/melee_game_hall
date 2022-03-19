@@ -3,6 +3,7 @@ package entity
 import (
 	"melee_game_hall/api/client"
 	"melee_game_hall/api/database"
+	"sync"
 )
 
 /**
@@ -14,6 +15,8 @@ import (
 
 //PlayerInfo 玩家的个人信息等
 type PlayerInfo struct {
+	InfoLock sync.Mutex
+
 	PlayerId  int32
 	NickName  string
 	GameCount int32 //参与游戏数
@@ -28,16 +31,6 @@ func PlayerInfoFromDB(info *database.PlayerInfo) *PlayerInfo {
 		GameCount: info.GameCount,
 		KillNum:   info.KillNum,
 		MaxKill:   info.MaxKill,
-	}
-}
-
-func NewHallPlayer(pInfo *PlayerInfo, server client.Client_ServeServer) *HallPlayer {
-	return &HallPlayer{
-		PlayerId: pInfo.PlayerId,
-		status:   PlayerIdle,
-		PInfo:    pInfo,
-		rInfo:    nil,
-		Conn:     server,
 	}
 }
 

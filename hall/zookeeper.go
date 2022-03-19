@@ -6,7 +6,7 @@ import "melee_game_hall/configs"
 *@Author Sly
 *@Date 2022/2/25
 *@Version 1.0
-*@Description:
+*@Description:用于同etcd进行连接.
  */
 
 var ZooKeeper = NewZooKeeperProxy(configs.ZookeeperAddr)

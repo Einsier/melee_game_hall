@@ -7,8 +7,6 @@ package gs
 *@Description:
  */
 
-const MaxNormalGamePlayerNum = int32(2) //normal版本的最大玩家人数
-
 //GameType 为了防止包的依赖,在这里不直接让gs包的GameType和client包的GameType用type保持一致
 //应该手动保持一致.具体的做法是找到自动生成的client.pb.go,然后从中找到GameType并手动复制
 type GameType int32
@@ -17,8 +15,9 @@ const (
 	NormalGameType GameType = 0
 )
 
+//GameTypeMaxPlayer 各种游戏类型的玩家数目,用于匹配对应数目的玩家进入游戏
 var GameTypeMaxPlayer = map[GameType]int{
-	NormalGameType: 3,
+	NormalGameType: 3, //普通游戏
 }
 
 type RoomInfo struct {
@@ -27,9 +26,23 @@ type RoomInfo struct {
 	RoomId int32  //房间id
 }
 
+//GameAccountInfo 对局结算信息
+type GameAccountInfo struct {
+	StartTime        int64
+	EndTime          int64
+	PlayerAccountMap map[int32]*PlayerAccountInfo
+}
+
+//PlayerAccountInfo 玩家结算信息
+type PlayerAccountInfo struct {
+	Id        int32 //玩家id
+	KillNum   int32 //击杀数
+	AliveTime int64 //生存时间
+}
+
 type RoomConnectionInfo struct {
 	Id         int32
-	ClientPort string
+	ClientAddr string
 }
 
 //PlayerInfo 暂时只有playerId,用于normal_game一开始玩家进入游戏时的身份校验
@@ -39,6 +52,7 @@ type PlayerInfo struct {
 
 type CreateNormalGameRequest struct {
 	PlayerInfo []*PlayerInfo
+	GameId     string //作为etcd的路径,游戏结束之后由server通知hall,方便hall落库
 }
 
 type StartNormalGameRequest struct {
