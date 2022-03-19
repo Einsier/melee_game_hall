@@ -5,6 +5,7 @@ import (
 	"google.golang.org/grpc"
 	"melee_game_hall/api/client"
 	"melee_game_hall/api/gs"
+	"melee_game_hall/configs"
 	"melee_game_hall/hall/codec"
 	"melee_game_hall/hall/entity"
 	"melee_game_hall/plugins/logger"
@@ -108,13 +109,9 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 	if h.queue[gameType] == nil {
 		//如果当前队列为空,那么创建一下
 		h.queue[gameType] = make(map[int32]struct{})
-		h.queue[gameType][pId] = struct{}{}
-	} else {
-		//如果不为空则将玩家加入
-		h.queue[gameType][pId] = struct{}{}
-
-		logger.Infof("玩家%d开始排队\n", pId)
 	}
+	h.queue[gameType][pId] = struct{}{}
+	logger.Infof("玩家%d开始排队\n", pId)
 	if len(h.queue[gameType]) == maxPlayer {
 		//如果凑齐人数的话,将所有正在排队的玩家取出,并且发给大厅服务器
 		players := make([]int32, maxPlayer)
@@ -129,6 +126,7 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 		logger.Infof("玩家:%v 排队成功,准备进入游戏\n", players)
 
 		//从注册中心拿到一个game_server的地址
+		//todo 改成集群内部服务发现
 		ip, gsRpcPort, _, err := ZooKeeper.GetGameServer()
 		if err != nil {
 			//如果zookeeper或者gs出现了问题,那么向所有排队的玩家的客户端发送错误报告
@@ -147,7 +145,9 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 					pInfo[i] = p.PInfo
 				}
 			}
-			rInfo, err := CreateGameRoom(ip, gsRpcPort, gameType, pInfo)
+
+			gameId := GetGameId()
+			rInfo, err := CreateGameRoom(configs.GameServerRpcAddr, gameType, pInfo, gameId)
 			if err != nil {
 				//如果开启game_room失败,返回错误信息
 				msg := codec.NewStartQueueResponse(false, nil, client.QueueErrorType_CanNotStartGameRoom)
@@ -167,11 +167,20 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 				return nil
 			}
 
+			//向etcd注册监听事件
+			go h.ListenGameAccountEvent(gameId)
+			logger.Infof("已注册gameId:%s 的etcd的监听事件", gameId)
+
 			h.ChangePlayerStatusByPlayerId(players, entity.PlayerInGame)
+
+			for _, pid := range players {
+				h.AddPlayerWaitAccount(pid, gameId)
+			}
 
 			//前端收到之后应该有短暂进入游戏的动画展示用于拖延时间,因为需要通知gs开启房间
 			err = StartGame(ip, gsRpcPort, rInfo.RoomId)
 			if err != nil {
+				//如果开启房间失败,前端负责处理,重新连回大厅
 				logger.Errorf("程序出错,未能StartGame")
 			}
 			return nil
@@ -191,22 +200,45 @@ func (h *Hall) ChangePlayerStatusByPlayerId(pId []int32, status entity.PlayerSta
 	}
 }
 
+//AddPlayerWaitAccount 为玩家添加对局等待事件
+func (h *Hall) AddPlayerWaitAccount(pid int32, gameId string) {
+	hp := h.GetHallPlayer(pid)
+	if hp == nil {
+		logger.Errorf("在为玩家添加等待对局信息时取到了不存在的用户.playerId:%d", pid)
+		return
+	}
+
+	hp.ALock.Lock()
+	defer hp.ALock.Unlock()
+	hp.WaitingAccount[gameId] = struct{}{}
+}
+
 //DeleteHallPlayer 删除playerId为 pId 的在大厅的玩家.如果当前玩家正在排队,给队列加锁并且删除掉该玩家.
 //不会判断当前有没有使用玩家的信息等.所以使用 GetHallPlayer 这个api的时候需要判断取出的玩家是不是nil
 func (h *Hall) DeleteHallPlayer(pId int32) {
 	hallPlayer := h.GetHallPlayer(pId)
 	if hallPlayer == nil {
+		//如果当前玩家已经被删除,那么直接返回
 		return
 	}
 	h.qLock.Lock()
+	//判断玩家是否在排队,如果在排队则从队列中删除该玩家
 	if hallPlayer.GetStatus() == entity.PlayerQueuing {
 		delete(h.queue[hallPlayer.QueueType], hallPlayer.PlayerId)
 	}
 	h.qLock.Unlock()
 
-	h.pLock.Lock()
-	defer h.pLock.Unlock()
-	delete(h.players, pId)
+	//判断该玩家是否还有没有结算的信息,如果存在,那么暂时不删除,而是将Quit字段改为true
+	hallPlayer.ALock.Lock()
+	if len(hallPlayer.WaitingAccount) > 0 {
+		hallPlayer.ALock.Unlock()
+		hallPlayer.Quit = true
+		return
+	}
+	hallPlayer.ALock.Unlock()
+
+	//如果该玩家没有待结算的信息,直接删除该玩家
+	h.DeleteHallPlayerAndPersist(pId)
 }
 
 //StopQueuing 取消排队

@@ -32,6 +32,10 @@ type HallPlayer struct {
 	PInfo *PlayerInfo               //玩家信息
 	rInfo *RoomInfo                 //如果如果玩家正在游戏,此字段保存正在游戏的信息
 	Conn  client.Client_ServeServer //用于联系玩家的grpc连接
+
+	ALock          sync.Mutex
+	WaitingAccount map[string]struct{} //用于记录当前还有哪些对局结算信息没有被落库
+	Quit           bool                //玩家是否断开连接
 }
 
 //SetStatus 互斥的切换玩家状态
@@ -46,4 +50,16 @@ func (hp *HallPlayer) GetStatus() PlayerStatus {
 	hp.sLock.Lock()
 	defer hp.sLock.Unlock()
 	return hp.status
+}
+
+func NewHallPlayer(pInfo *PlayerInfo, server client.Client_ServeServer) *HallPlayer {
+	return &HallPlayer{
+		PlayerId:       pInfo.PlayerId,
+		status:         PlayerIdle,
+		PInfo:          pInfo,
+		rInfo:          nil,
+		Conn:           server,
+		WaitingAccount: make(map[string]struct{}),
+		Quit:           false,
+	}
 }

@@ -61,3 +61,8 @@ func TestHall_BasicOption(t *testing.T) {
 	}
 	time.Sleep(1 * time.Second)
 }
+
+func TestGetGameId(t *testing.T) {
+	fmt.Printf("%v\n", time.Now().UnixNano())
+	fmt.Printf("%v\n", GetGameId())
+}
