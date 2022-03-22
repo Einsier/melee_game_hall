@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hall-external
+  annotations:
+    service.kubernetes.io/tke-existed-lbid: lb-5uh4xaz1  # 使用已创建好的 clb 实例
+spec:
+  ports:
+    - port: 32006
+      targetPort: 9000
+      protocol: TCP
+  selector:
+    app: hall
+  type: LoadBalancer

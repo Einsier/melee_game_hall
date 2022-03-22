@@ -1,0 +1,41 @@
+# headless service
+apiVersion: v1
+kind: Service
+metadata:
+  name: hall-internal
+  labels:
+    app: hall
+spec:
+  ports:
+    - port: 32005
+      targetPort: 8000
+  selector:
+    app: hall
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name:hall
+spec:
+  selector:
+    matchLabels:
+      app: hall
+  serviceName: "hall"
+  replicas: 1 # by default is 1
+  template:
+    metadata:
+      labels:
+        app: hall
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: hall
+          image: melee-game-hall
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+            - containerPort: 9000
+              protocol: TCP
+      restartPolicy: Always

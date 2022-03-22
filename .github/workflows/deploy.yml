@@ -1,0 +1,73 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: 
+      - release  #触发的分支
+
+# Environment variables available to all jobs and steps in this workflow
+env:
+  NAME: game-server
+  VERSION: 1.0  #当前版本（用于镜像标签）
+  TKE_REGION: ap-shanghai  #集群地区
+  TKE_CLUSTER_NAME: cls-fo122wzb-100003895836-context-default  #集群上下文名称
+  DBPROXY_ADDR: db-proxy:32002
+  NAMESPACE: melee-game  #集群命名空间
+  IMAGE_NAME: melee-game-hall #镜像名称
+
+jobs:
+  go-fmt:
+    name: Fmt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fmt
+        run: if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then exit 1; fi
+  build-push-deploy:
+    name: Build, push and deploy
+    runs-on: ubuntu-latest
+    needs:
+      - go-fmt
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      # 通过 Dockerfile 制作镜像
+      - name: Build Docker image
+        run: |
+          docker build --build-arg DBPROXY_ADDR=${{ env.DBPROXY_ADDR }} -t ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} .
+      # 登录镜像仓库
+      - name: Login Docker Hub
+        run: |
+          docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
+      # 推送镜像至仓库
+      - name: Push image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+      # 配置Kustomize
+      - name: Set up Kustomize
+        run: |
+          curl -o kustomize --location https://github.com/kubernetes-sigs/kustomize/releases/download/v3.1.0/kustomize_3.1.0_linux_amd64
+          chmod u+x ./kustomize
+      # 配置kubectl客户端
+      - name: Set up ~/.kube/config for connecting TKE cluster
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          mkdir -p ~/.kube
+          echo "${{ secrets.TKE_KUBECONFIG }}" > ~/.kube/config
+        # uses: TencentCloud/tke-cluster-credential-action@v1
+        # with:
+        #   secret_id: ${{ secrets.TENCENT_CLOUD_SECRET_ID }}
+        #   secret_key: ${{ secrets.TENCENT_CLOUD_SECRET_KEY }}
+        #   tke_region: ${{ env.TKE_REGION }}
+        #   cluster_id: ${{ env.TKE_CLUSTER_ID }}
+      # 切换集群环境
+      - name: Switch to TKE context
+        run: |
+          kubectl config use-context ${{env.TKE_CLUSTER_NAME }}
+      # 更新应用
+      - name: Deploy To TKE
+        run: |
+          (cd deployments && ./../kustomize edit set image ${{ env.IMAGE_NAME }}=${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }})
+          (cd deployments && ./../kustomize build . | kubectl -n ${{ env.NAMESPACE }} apply  -f - )
+          kubectl -n ${{ env.NAMESPACE }} rollout status deployment/${{ env.NAME }}
+          kubectl -n ${{ env.NAMESPACE }} get services -o wide
