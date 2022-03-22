@@ -125,66 +125,52 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 		h.qLock.Unlock()
 		logger.Infof("玩家:%v 排队成功,准备进入游戏\n", players)
 
-		//从注册中心拿到一个game_server的地址
-		//todo 改成集群内部服务发现
-		ip, gsRpcPort, _, err := ZooKeeper.GetGameServer()
+		pInfo := make([]*entity.PlayerInfo, maxPlayer)
+		for i := 0; i < maxPlayer; i++ {
+			p := h.GetHallPlayer(players[i])
+			if p != nil {
+				pInfo[i] = p.PInfo
+			}
+		}
+
+		gameId := GetGameId()
+		rInfo, err := CreateGameRoom(configs.GameServerRpcAddr, gameType, pInfo, gameId)
 		if err != nil {
-			//如果zookeeper或者gs出现了问题,那么向所有排队的玩家的客户端发送错误报告
-			logger.Errorf("Zookeeper加载gs发生异常:%v", err)
-			msg := codec.NewStartQueueResponse(false, nil, client.QueueErrorType_CanNotStartGameServer)
+			//如果开启game_room失败,返回错误信息
+			msg := codec.NewStartQueueResponse(false, nil, client.QueueErrorType_CanNotStartGameRoom)
 			h.SendHallPlayersByPlayerId(players, msg)
-			//有问题的话把玩家状态由排队改成空闲
 			h.ChangePlayerStatusByPlayerId(players, entity.PlayerIdle)
 			return err
-		} else {
-			//如果成功从注册中心拿到game_server地址,给全部玩家发送game_server的地址
-			pInfo := make([]*entity.PlayerInfo, maxPlayer)
-			for i := 0; i < maxPlayer; i++ {
-				p := h.GetHallPlayer(players[i])
-				if p != nil {
-					pInfo[i] = p.PInfo
-				}
-			}
-
-			gameId := GetGameId()
-			rInfo, err := CreateGameRoom(configs.GameServerRpcAddr, gameType, pInfo, gameId)
-			if err != nil {
-				//如果开启game_room失败,返回错误信息
-				msg := codec.NewStartQueueResponse(false, nil, client.QueueErrorType_CanNotStartGameRoom)
-				h.SendHallPlayersByPlayerId(players, msg)
-				h.ChangePlayerStatusByPlayerId(players, entity.PlayerIdle)
-				return err
-			}
-			//如果正常开启game_room,给排队的玩家返回对局信息
-			msg := codec.NewStartQueueResponse(true, rInfo, 0)
-			ok := h.SendHallPlayersByPlayerId(players, msg)
-			if !ok {
-				//如果出现了队列中的玩家失去连接等情况,给其它玩家发送失败,并且给gs发送删除game_room的请求
-				_, _ = DestroyGameRoom(ip, gsRpcPort, rInfo.RoomId)
-				msg := codec.NewStartQueueResponse(false, nil, client.QueueErrorType_NoEnoughPlayer)
-				h.SendHallPlayersByPlayerId(players, msg)
-				h.ChangePlayerStatusByPlayerId(players, entity.PlayerIdle)
-				return nil
-			}
-
-			//向etcd注册监听事件
-			go h.ListenGameAccountEvent(gameId)
-			logger.Infof("已注册gameId:%s 的etcd的监听事件", gameId)
-
-			h.ChangePlayerStatusByPlayerId(players, entity.PlayerInGame)
-
-			for _, pid := range players {
-				h.AddPlayerWaitAccount(pid, gameId)
-			}
-
-			//前端收到之后应该有短暂进入游戏的动画展示用于拖延时间,因为需要通知gs开启房间
-			err = StartGame(ip, gsRpcPort, rInfo.RoomId)
-			if err != nil {
-				//如果开启房间失败,前端负责处理,重新连回大厅
-				logger.Errorf("程序出错,未能StartGame")
-			}
+		}
+		//如果正常开启game_room,给排队的玩家返回对局信息
+		msg := codec.NewStartQueueResponse(true, rInfo, 0)
+		ok := h.SendHallPlayersByPlayerId(players, msg)
+		if !ok {
+			//如果出现了队列中的玩家失去连接等情况,给其它玩家发送失败,并且给gs发送删除game_room的请求
+			_, _ = DestroyGameRoom(configs.GameServerRpcAddr, rInfo.RoomId)
+			msg := codec.NewStartQueueResponse(false, nil, client.QueueErrorType_NoEnoughPlayer)
+			h.SendHallPlayersByPlayerId(players, msg)
+			h.ChangePlayerStatusByPlayerId(players, entity.PlayerIdle)
 			return nil
 		}
+
+		//向etcd注册监听事件
+		go h.ListenGameAccountEvent(gameId)
+		logger.Infof("已注册gameId:%s 的etcd的监听事件", gameId)
+
+		h.ChangePlayerStatusByPlayerId(players, entity.PlayerInGame)
+
+		for _, pid := range players {
+			h.AddPlayerWaitAccount(pid, gameId)
+		}
+
+		//前端收到之后应该有短暂进入游戏的动画展示用于拖延时间,因为需要通知gs开启房间
+		err = StartGame(configs.GameServerRpcAddr, rInfo.RoomId)
+		if err != nil {
+			//如果开启房间失败,前端负责处理,重新连回大厅
+			logger.Errorf("程序出错,未能StartGame")
+		}
+		return nil
 	}
 	h.qLock.Unlock()
 	return nil

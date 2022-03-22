@@ -64,10 +64,10 @@ func CreateGameRoom(gameServerRpcAddr string, gameType entity.GameType, info []*
 	}
 }
 
-func StartGame(gsIP, gsPort string, roomId int32) error {
+func StartGame(gsAddr string, roomId int32) error {
 	startGameRep := gs.StartNormalGameRequest{RoomId: roomId}
 	ret := new(gs.StartNormalGameResponse)
-	err := callRpc(gsIP+gsPort, "GameServer.StartNormalGame", startGameRep, ret)
+	err := callRpc(gsAddr, "GameServer.StartNormalGame", startGameRep, ret)
 	if err != nil {
 		return err
 	} else {
@@ -78,10 +78,10 @@ func StartGame(gsIP, gsPort string, roomId int32) error {
 	}
 }
 
-func DestroyGameRoom(gsIP, gsPort string, roomId int32) (gs.RoomStatus, error) {
+func DestroyGameRoom(gsAddr string, roomId int32) (gs.RoomStatus, error) {
 	destroyGameRoomReq := gs.DestroyGameRoomRequest{RoomId: roomId}
 	ret := new(gs.DestroyGameRoomResponse)
-	err := callRpc(gsIP+gsPort, "GameServer.DestroyGameRoom", destroyGameRoomReq, ret)
+	err := callRpc(gsAddr, "GameServer.DestroyGameRoom", destroyGameRoomReq, ret)
 	if err != nil {
 		return 0, err
 	} else {
