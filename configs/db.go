@@ -7,4 +7,4 @@ package configs
 *@Description:
  */
 
-const DBProxyAddr = "127.0.0.1:1234"
+var DBProxyAddr = ""
