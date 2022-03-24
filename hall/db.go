@@ -3,7 +3,6 @@ package hall
 import (
 	"log"
 	"melee_game_hall/api/database"
-	"melee_game_hall/configs"
 	"melee_game_hall/plugins/logger"
 )
 
@@ -15,7 +14,7 @@ import (
  */
 
 //如果测试(不校验/落库信息),把下面这行等号之后,一直到type DBProxy上面一行注释掉
-var DB *DBProxy = NewDBProxy(configs.DBProxyAddr)
+var DB *DBProxy
 
 func NewDBProxy(addr string) *DBProxy {
 	dbp := &DBProxy{addr: addr}
