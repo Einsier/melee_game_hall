@@ -11,7 +11,7 @@ env:
   VERSION: 1.0  #当前版本（用于镜像标签）
   TKE_REGION: ap-shanghai  #集群地区
   TKE_CLUSTER_NAME: cls-fo122wzb-100003895836-context-default  #集群上下文名称
-  GSRPC_ADDR: game-server-0:32003
+  GSRPC_ADDR: game-server-0.game-server-internal:32003
   DBPROXY_ADDR: db-proxy:32002
   ETCD_ADDR: etcd:32007
   NAMESPACE: melee-game  #集群命名空间
