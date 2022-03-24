@@ -4,6 +4,7 @@ metadata:
   name: hall-external
   annotations:
     service.kubernetes.io/tke-existed-lbid: lb-5uh4xaz1  # 使用已创建好的 clb 实例
+    service.kubernetes.io/qcloud-share-existed-lb: "true"
 spec:
   ports:
     - port: 32006
