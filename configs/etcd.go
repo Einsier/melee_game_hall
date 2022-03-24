@@ -7,6 +7,6 @@ package configs
 *@Description:
  */
 
-const EtcdAddr = "localhost:2379"
+var EtcdAddr = ""
 
 const AccountPath = "/account"
