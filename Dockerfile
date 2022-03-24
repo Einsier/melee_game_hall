@@ -10,9 +10,9 @@ FROM alpine:latest
 ARG GSRPC_ADDR
 ARG DBPROXY_ADDR
 ARG ETCD_ADDR
-ENV ENV_GSRPC_ADDR=$GSRPC_ADDR
-ENV ENV_DBPROXY_ADDR=$DBPROXY_ADDR
-ENV ENV_ETCD_ADDR=$ETCD_ADDR
+ENV ENV_GSRPC_ADDR=$GSRPC_ADDR \
+    ENV_DBPROXY_ADDR=$DBPROXY_ADDR \
+    ENV_ETCD_ADDR=$ETCD_ADDR
 WORKDIR  /root/go/src/github.com/einsier/ustc_melee_game
 COPY --from=builder  /root/go/src/github.com/einsier/ustc_melee_game/hall .
 EXPOSE 8000/tcp
