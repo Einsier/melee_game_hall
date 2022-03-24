@@ -14,7 +14,7 @@ ENV ENV_GSRPC_ADDR=$GSRPC_ADDR
 ENV ENV_DBPROXY_ADDR=$DBPROXY_ADDR
 ENV ENV_ETCD_ADDR=$ETCD_ADDR
 WORKDIR  /root/go/src/github.com/einsier/ustc_melee_game
-COPY --from=builder  /root/go/src/github.com/einsier/ustc_melee_game/game-server .
+COPY --from=builder  /root/go/src/github.com/einsier/ustc_melee_game/hall .
 EXPOSE 8000/tcp
 EXPOSE 9000/tcp
 ENTRYPOINT ./hall -gsRpcAddr $ENV_GSRPC_ADDR -dbProxyAddr $ENV_DBPROXY_ADDR -etcdAddr $ENV_ETCD_ADDR
