@@ -19,9 +19,21 @@ var clientGrpcPortFlag = flag.String("clientGrpcPort", ":9000", "set the port of
 var gsRpcAddrFlag = flag.String("gsRpcAddr", "localhost:8000", "set the addr of rpc in order to communicate with game server")
 var dbProxyAddrFlag = flag.String("dbProxyAddr", "42.192.200.194:32002", "set the database proxy's addr")
 var etcdAddrFlag = flag.String("etcdAddr", "42.192.200.194:2379", "set the address of etcd")
+var testFlag = flag.Bool("t", false, "if this is a local test")
+
+func ParseFlags() {
+	flag.Parse()
+	if *testFlag {
+		//如果当前是本机测试
+		*clientGrpcPortFlag = ":9000"
+		*gsRpcAddrFlag = "localhost:8000"
+		*etcdAddrFlag = "42.192.200.194:2379"
+		*dbProxyAddrFlag = "1.116.109.113:1234"
+	}
+}
 
 func main() {
-	flag.Parse()
+	ParseFlags()
 	_ = hall.NewHall("0.0.0.0" + *clientGrpcPortFlag)
 	configs.GameServerRpcAddr = *gsRpcAddrFlag
 	configs.DBProxyAddr = *dbProxyAddrFlag
