@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"melee_game_hall/api/gs"
 	"melee_game_hall/configs"
 	"melee_game_hall/hall"
 	"melee_game_hall/plugins/logger"
@@ -20,6 +21,7 @@ var gsRpcAddrFlag = flag.String("gsRpcAddr", "localhost:8000", "set the addr of 
 var dbProxyAddrFlag = flag.String("dbProxyAddr", "42.192.200.194:32002", "set the database proxy's addr")
 var etcdAddrFlag = flag.String("etcdAddr", "42.192.200.194:2379", "set the address of etcd")
 var testFlag = flag.Bool("t", false, "if this is a local test")
+var playerNumFlag = flag.Int("playerNum", 3, "configs the number of players in each game which must be same as the server's config")
 
 func ParseFlags() {
 	flag.Parse()
@@ -38,6 +40,7 @@ func main() {
 	configs.GameServerRpcAddr = *gsRpcAddrFlag
 	configs.DBProxyAddr = *dbProxyAddrFlag
 	configs.EtcdAddr = *etcdAddrFlag
+	gs.GameTypeMaxPlayer[gs.NormalGameType] = *playerNumFlag
 	hall.EtcdCli = hall.NewEtcdCli()
 	hall.DB = hall.NewDBProxy(configs.DBProxyAddr)
 	logger.Info("hall开始运行")
