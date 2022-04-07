@@ -26,7 +26,7 @@ func NewDBProxy(addr string) *DBProxy {
 	if err != nil {
 		log.Fatalln("数据库代理模块连接失败...")
 	}
-	logger.Infof("resp from dbProxy:%+v", resp)
+	logger.Infof("数据库代理连接成功\n")
 	return dbp
 }
 
