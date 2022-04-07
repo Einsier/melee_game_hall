@@ -40,8 +40,12 @@ func CreateGameRoom(gameServerRpcAddr string, gameType entity.GameType, info []*
 		createReq.GameId = gameId
 		pIds := make([]*gs.PlayerInfo, len(info))
 		for i := 0; i < len(info); i++ {
-			pIds[i] = &gs.PlayerInfo{PlayerId: info[i].PlayerId}
+			pIds[i] = &gs.PlayerInfo{
+				PlayerId: info[i].PlayerId,
+				NickName: info[i].NickName,
+			}
 		}
+
 		createReq.PlayerInfo = pIds
 		ret := new(gs.CreateNormalGameResponse)
 		err := callRpc(gameServerRpcAddr, "GameServer.CreateNormalGameRoom", createReq, ret)

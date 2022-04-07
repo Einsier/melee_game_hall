@@ -45,9 +45,10 @@ type RoomConnectionInfo struct {
 	ClientAddr string
 }
 
-//PlayerInfo 暂时只有playerId,用于normal_game一开始玩家进入游戏时的身份校验
+//PlayerInfo 用于normal_game一开始玩家进入游戏时的身份校验以及玩家的姓名展示
 type PlayerInfo struct {
 	PlayerId int32
+	NickName string
 }
 
 type CreateNormalGameRequest struct {
