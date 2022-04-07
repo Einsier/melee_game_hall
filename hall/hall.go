@@ -11,6 +11,7 @@ import (
 	"melee_game_hall/plugins/logger"
 	"net"
 	"sync"
+	"time"
 )
 
 /**
@@ -143,12 +144,13 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 			return err
 		}
 		//如果正常开启game_room,给排队的玩家返回对局信息
+		time.Sleep(20 * time.Millisecond)
 		msg := codec.NewStartQueueResponse(true, rInfo, 0)
 		ok := h.SendHallPlayersByPlayerId(players, msg)
 		if !ok {
 			//如果出现了队列中的玩家失去连接等情况,给其它玩家发送失败,并且给gs发送删除game_room的请求
-			_, _ = DestroyGameRoom(configs.GameServerRpcAddr, rInfo.RoomId)
-			msg := codec.NewStartQueueResponse(false, nil, client.QueueErrorType_NoEnoughPlayer)
+			//_, _ = DestroyGameRoom(configs.GameServerRpcAddr, rInfo.RoomId)
+			msg = codec.NewStartQueueResponse(false, nil, client.QueueErrorType_NoEnoughPlayer)
 			h.SendHallPlayersByPlayerId(players, msg)
 			h.ChangePlayerStatusByPlayerId(players, entity.PlayerIdle)
 			return nil
@@ -163,13 +165,12 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 		for _, pid := range players {
 			h.AddPlayerWaitAccount(pid, gameId)
 		}
-
 		//前端收到之后应该有短暂进入游戏的动画展示用于拖延时间,因为需要通知gs开启房间
-		err = StartGame(configs.GameServerRpcAddr, rInfo.RoomId)
-		if err != nil {
-			//如果开启房间失败,前端负责处理,重新连回大厅
-			logger.Errorf("程序出错,未能StartGame")
-		}
+		//err = StartGame(configs.GameServerRpcAddr, rInfo.RoomId)
+		//if err != nil {
+		//	//如果开启房间失败,前端负责处理,重新连回大厅
+		//	logger.Errorf("程序出错,未能StartGame")
+		//}
 		return nil
 	}
 	h.qLock.Unlock()
