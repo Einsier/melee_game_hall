@@ -73,7 +73,12 @@ func (h *Hall) Serve(stream client.Client_ServeServer) error {
 			break
 		}
 	}
-
+	if h.GetHallPlayer(pId) != nil {
+		htoC := codec.NewLoginResponse(false, database.WrongPassword, nil)
+		_ = stream.Send(htoC)
+		logger.Errorf("playerId:%d重复登录", pId)
+		return errors.New("玩家重复登录")
+	}
 	//代码执行到这里,用户已经登录成功,存储该用户,表示其上线
 	h.AddHallPlayer(hallPlayer)
 	logger.Infof("playerId:%d的player进入大厅", pId)
