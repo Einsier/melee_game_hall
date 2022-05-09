@@ -13,11 +13,11 @@ var (
 		Name: "game_room_count",
 		Help: "当前游戏房间数量",
 	})
-	// GaugeVecGameRoomCount.Inc() 游戏房间数量 +1
-	// GaugeVecGameRoomCount.Dec() 游戏房间数量 -1
-	// GaugeVecGameRoomCount.Add(n) 游戏房间数量 +n
-	// GaugeVecGameRoomCount.Sub(n) 游戏房间数量 -n
-	// GaugeVecGameRoomCount.Set(n) 游戏房间数量设置为 n
+	// GaugeGameRoomCount.Inc() 游戏房间数量 +1
+	// GaugeGameRoomCount.Dec() 游戏房间数量 -1
+	// GaugeGameRoomCount.Add(n) 游戏房间数量 +n
+	// GaugeGameRoomCount.Sub(n) 游戏房间数量 -n
+	// GaugeGameRoomCount.Set(n) 游戏房间数量设置为 n
 )
 
 func Start() {
