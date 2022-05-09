@@ -9,6 +9,8 @@ spec:
   ports:
     - port: 32005
       targetPort: 8000
+    - port: 8080
+      targetPort: 8080
   selector:
     app: hall
   clusterIP: None
@@ -34,8 +36,10 @@ spec:
           image: melee-game-hall
           imagePullPolicy: Always
           ports:
-            - containerPort: 8000
+            - containerPort: 8000 # gs to hall
               protocol: TCP
-            - containerPort: 9000
+            - containerPort: 9000 # client to hall
+              protocol: TCP
+            - containerPort: 8080 # metrics
               protocol: TCP
       restartPolicy: Always
