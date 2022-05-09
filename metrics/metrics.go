@@ -9,7 +9,7 @@ import (
 
 var (
 	//定义游戏指标
-	GaugeVecGameRoomCount = prometheus.NewGauge(prometheus.GaugeOpts{
+	GaugeGameRoomCount = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "game_room_count",
 		Help: "当前游戏房间数量",
 	})
@@ -22,7 +22,7 @@ var (
 
 func Start() {
 	// 将指标注册到 Prometheus 默认仓库
-	prometheus.MustRegister(GaugeVecGameRoomCount)
+	prometheus.MustRegister(GaugeGameRoomCount)
 
 	// Serve the default Prometheus metrics registry over HTTP on /metrics.
 	http.Handle("/metrics", promhttp.Handler())
