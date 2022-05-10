@@ -27,16 +27,8 @@ var (
 
 // log methods		暴露这几个方法,作为模块中的全局变量,方便以后修改向其他地方输出/调用
 var (
-	Error  = errorLog.Println
 	Errorf = errorLog.Printf
-	Info   = infoLog.Println
 	Infof  = infoLog.Printf
-
-	//Test 测试相关
-	Test     = testLog.Println
-	Testf    = testLog.Printf
-	TestErr  = testErrorLog.Println
-	TestErrf = testErrorLog.Printf
 )
 
 const (

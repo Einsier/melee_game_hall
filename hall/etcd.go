@@ -16,6 +16,7 @@ import (
 	"melee_game_hall/api/database"
 	"melee_game_hall/api/gs"
 	"melee_game_hall/configs"
+	"melee_game_hall/metrics"
 	"melee_game_hall/plugins/logger"
 	"melee_game_hall/utils"
 	"strconv"
@@ -59,6 +60,7 @@ func (h *Hall) ListenGameAccountEvent(gameId string) {
 	response := <-ch
 
 	logger.Infof("监听到对局:%s已结束,开始持久化操作", gameId)
+	metrics.GaugeGameRoomCount.Dec()
 	if len(response.Events) == 0 {
 		//如果取到的值无效,或者超出最大的等待时间,那么不再等待,直接返回
 		logger.Errorf("%s的对局结算信息有误", gameId)

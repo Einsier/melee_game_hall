@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -26,5 +27,5 @@ func Start() {
 
 	// Serve the default Prometheus metrics registry over HTTP on /metrics.
 	http.Handle("/metrics", promhttp.Handler())
-	http.ListenAndServe(":8080", nil)
+	log.Fatalln(http.ListenAndServe(":8889", nil))
 }

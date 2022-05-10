@@ -8,6 +8,7 @@ import (
 	"melee_game_hall/configs"
 	"melee_game_hall/hall/codec"
 	"melee_game_hall/hall/entity"
+	"melee_game_hall/metrics"
 	"melee_game_hall/plugins/logger"
 	"net"
 	"sync"
@@ -159,7 +160,7 @@ func (h *Hall) JoinQueue(gameType entity.GameType, pId int32) error {
 		//向etcd注册监听事件
 		go h.ListenGameAccountEvent(gameId)
 		logger.Infof("已注册gameId:%s 的etcd的监听事件", gameId)
-
+		metrics.GaugeGameRoomCount.Inc()
 		h.ChangePlayerStatusByPlayerId(players, entity.PlayerInGame)
 
 		for _, pid := range players {

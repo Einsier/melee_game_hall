@@ -73,11 +73,19 @@ func (h *Hall) Serve(stream client.Client_ServeServer) error {
 			break
 		}
 	}
-	if h.GetHallPlayer(pId) != nil {
-		htoC := codec.NewLoginResponse(false, database.WrongPassword, nil)
-		_ = stream.Send(htoC)
-		logger.Errorf("playerId:%d重复登录", pId)
-		return errors.New("玩家重复登录")
+	if onlinePlayer := h.GetHallPlayer(pId); onlinePlayer != nil {
+		onlinePlayer.ALock.Lock()
+		quit := onlinePlayer.Quit
+		onlinePlayer.ALock.Unlock()
+
+		//如果玩家当前在大厅中,并且并不是以退出,但是在等待结算信息状态,则说明重复登录
+		//而如果玩家当前已经退出,但是对应的hall player没有被删除,而是在等待结算信息,那么可以让玩家登录
+		if !quit {
+			htoC := codec.NewLoginResponse(false, database.WrongPassword, nil)
+			_ = stream.Send(htoC)
+			logger.Errorf("playerId:%d重复登录", pId)
+			return errors.New("玩家重复登录")
+		}
 	}
 	//代码执行到这里,用户已经登录成功,存储该用户,表示其上线
 	h.AddHallPlayer(hallPlayer)
