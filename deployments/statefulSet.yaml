@@ -9,8 +9,10 @@ spec:
   ports:
     - port: 32005
       targetPort: 8000
+      name: rpc
     - port: 8080
       targetPort: 8080
+      name: metrics
   selector:
     app: hall
   clusterIP: None
