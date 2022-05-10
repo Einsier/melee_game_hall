@@ -27,5 +27,5 @@ func Start() {
 
 	// Serve the default Prometheus metrics registry over HTTP on /metrics.
 	http.Handle("/metrics", promhttp.Handler())
-	log.Fatalln(http.ListenAndServe(":8889", nil))
+	log.Fatalln(http.ListenAndServe(":8080", nil))
 }
