@@ -24,7 +24,7 @@ var gsRpcAddrFlag = flag.String("gsRpcAddr", "localhost:8000", "set the addr of 
 var dbProxyAddrFlag = flag.String("dbProxyAddr", "42.192.200.194:32002", "set the database proxy's addr")
 var etcdAddrFlag = flag.String("etcdAddr", "42.192.200.194:2379", "set the address of etcd")
 var testFlag = flag.Bool("t", false, "if this is a local test")
-var playerNumFlag = flag.Int("playerNum", 3, "configs the number of players in each game which must be same as the server's config")
+var playerNumFlag = flag.Int("playerNum", 10, "configs the number of players in each game which must be same as the server's config")
 
 func ParseFlags() {
 	flag.Parse()
