@@ -7,7 +7,7 @@ on:
 
 # Environment variables available to all jobs and steps in this workflow
 env:
-  NAME: game-server
+  NAME: hall
   VERSION: v1.0.0  #当前版本（用于镜像标签）
   TKE_REGION: ap-shanghai  #集群地区
   TKE_CLUSTER_NAME: cls-fo122wzb-100003895836-context-default  #集群上下文名称
