@@ -54,6 +54,6 @@ func main() {
 	gs.GameTypeMaxPlayer[gs.NormalGameType] = *playerNumFlag
 	hall.EtcdCli = hall.NewEtcdCli()
 	hall.DB = hall.NewDBProxy(configs.DBProxyAddr)
-	logger.Infof("hall开始运行")
+	logger.Infof("hall开始运行，单局玩家数为：%d", *playerNumFlag)
 	time.Sleep(100 * time.Minute)
 }

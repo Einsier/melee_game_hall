@@ -37,6 +37,9 @@ spec:
         - name: hall
           image: melee-game-hall
           imagePullPolicy: Always
+          env:
+          - name: "ENV_PLAYER_NUM"
+            value: "10"
           ports:
             - containerPort: 8000 # gs to hall
               protocol: TCP
